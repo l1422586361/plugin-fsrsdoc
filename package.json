@@ -13,6 +13,7 @@
     "build": "vite build"
   },
   "devDependencies": {
+    "@brewer/beerui": "^1.1.17",
     "@sveltejs/vite-plugin-svelte": "^2.0.3",
     "@tsconfig/svelte": "^4.0.1",
     "@types/node": "^20.2.0",
