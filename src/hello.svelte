@@ -12,6 +12,7 @@
     let divProtyle: HTMLDivElement;
     let protyle: any;
     let blockID: string = '';
+    let sql: string = 'SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;';
 
     onMount(async () => {
         ver = await version();
@@ -27,13 +28,21 @@
     });
 
     async function initProtyle() {
-        let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
+        // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
         let blocks: Block[] = await query(sql);
         blockID = blocks[0].id;
         return new Protyle(app, divProtyle, {
             blockId: blockID
         });
     }
+
+    let isSettingActive: boolean = false
+    let areaRead: boolean = true
+    async function 激活设置按钮() {
+        isSettingActive = !isSettingActive
+        areaRead = !areaRead
+    }
+
 </script>
 
 <style>
@@ -95,7 +104,7 @@
                 <option value="条件a">条件d</option>
             </select>
             <div class="fn__hr" />
-            <BeTextarea value='111' rows="9" cols="40" readonly> </BeTextarea>
+            <BeTextarea bind:value={sql} rows="9" cols="40" bind:readonly={areaRead}> </BeTextarea>
         </div>
         
         <!-- <div>Protyle demo: id = {blockID}</div> -->
@@ -111,9 +120,18 @@
                 <button>新材料</button>
                 <button>复习</button>
                 <button>忽略此材料</button>
-                <button>设置</button>
+                <button on:click={激活设置按钮}>设置</button>
+                
                 <button on:click={initProtyle}>测试</button>
             </div>
+            <div class="fn__hr" />
+            {#if isSettingActive}
+                    <button on:click={激活设置按钮}>保存</button>
+                    <button on:click={激活设置按钮}>取消</button>
+            {:else}
+                <button on:click={激活设置按钮} style="display: none">保存</button>
+                <button on:click={激活设置按钮} style="display: none">取消</button>
+            {/if}
         </div>
     </div>
     
