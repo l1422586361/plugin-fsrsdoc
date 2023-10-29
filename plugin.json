@@ -1,8 +1,8 @@
 {
-  "name": "plugin-sample-vite-svelte",
-  "author": "frostime",
-  "url": "https://github.com/siyuan-note/plugin-sample-vite-svelte",
-  "version": "0.2.6",
+  "name": "plugin-fsrsdoc",
+  "author": "lin",
+  "url": "https://github.com/l1422586361/plugin-fsrsdoc",
+  "version": "0.1",
   "minAppVersion": "2.10.12",
   "backends": [
     "windows",
@@ -14,12 +14,12 @@
     "desktop-window"
   ],
   "displayName": {
-    "en_US": "Plugin sample with vite and svelte",
-    "zh_CN": "插件样例 vite + svelte 版"
+    "en_US": "Document roaming based on fsrs",
+    "zh_CN": "文档温故"
   },
   "description": {
-    "en_US": "SiYuan plugin sample with vite and svelte",
-    "zh_CN": "使用 vite 和 svelte 开发的思源插件样例"
+    "en_US": "Document roaming based on fsrs",
+    "zh_CN": "使用fsrs的文档漫游"
   },
   "readme": {
     "en_US": "README.md",
