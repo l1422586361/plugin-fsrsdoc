@@ -5,7 +5,6 @@
     // import '@brewer/beerui/assets/beer.css'
     import {
         BeTextarea
-
     } from '@brewer/beerui';
     import { 获取配置,写入配置 } from "./writeConfig.js";
 
@@ -21,8 +20,9 @@
 
 
 
-    let 条件组 = [];
-    let sql: string = ''; 
+    let 条件组: string[] = [];
+    let currentTitle: string = 'Default'
+    let currentSql: string = ''; 
 
     onMount(async () => {
         ver = await version();
@@ -34,7 +34,7 @@
         conf = await 获取配置();
         console.log(conf)
         条件组 = conf.条件组
-        sql = 条件组.find(dict => dict.title ='Default')['sql'] || 'SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;'; // TODO：后面加入到设置里，初始条件
+        currentSql = 条件组.find(dict => dict.title =currentTitle)['sql']; // TODO：后面加入到设置里，初始条件
         // console.log(sql)
     });
 
@@ -54,23 +54,87 @@
 
     async function getProtyle() {
         // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
-        let blocks: Block[] = await query(sql);
+        let blocks: Block[] = await query(currentSql);
         blockID = blocks[0].id;
         return new Protyle(app, divProtyle, {
             blockId: blockID
         });
     }
 
+    function changCurrent(){
+        // 下拉列表属性跟踪
+        let currentIndex = event.target.selectedIndex
+        currentTitle = event.target.options[currentIndex].getAttribute("label")
+        currentSql = event.target.value
+        
+        console.log(currentTitle,currentSql)
+    }
+
+
+    // 设置按钮功能区
     let isSettingActive: boolean = false
     let areaRead: boolean = true
     async function 激活设置按钮() {
         isSettingActive = !isSettingActive
         areaRead = !areaRead
+        if ( isAddConditions = true){
+            isAddConditions = !isAddConditions
+        }
     }
     async function 保存设置() {
+        if (var1 !='' && var2 !=''){
+            // 新增条件
+            const isDuplicate = 条件组.some(item => item.title === var1 && item.sql === var2)
+            let newConditions = {"title":var1,"sql": var2}
+            if(isDuplicate){
+                showMessage('已有重复的条件')
+                return
+            }else{
+                // 如果title重复，修改原来的，如果title不重复，新增加一个
+                if(条件组.some(item => item.title === var1)){
+                    条件组 = 条件组.filter(item=>item.title !== var1)
+                }
+                条件组.push(newConditions)
+                conf.条件组 = 条件组
+                写入配置(conf)
+                var1 = ''
+                var2 = ''
+            }
+        }
+
         激活设置按钮()
     }
 
+
+    // 增加条件功能区
+    let isAddConditions: boolean = false
+    let var1: string = ''
+    let var2: string = ''
+    async function 激活增加条件按钮() {
+        if(isAddConditions == false){
+            isAddConditions = !isAddConditions
+        }
+        var1 = ''
+        var2 = ''
+    }
+
+    // 编辑当前条件功能区
+    async function 激活编辑当前条件按钮(){
+        if(isAddConditions == false){
+            isAddConditions = !isAddConditions
+        }
+        var1 = currentTitle
+        var2 = currentSql
+    }
+
+    // 删除当前条件功能区
+    function 激活删除当前条件按钮(){
+        // 获取当前条件标题
+        条件组 = 条件组.filter(item => item.title != currentTitle)
+        // console.log(条件组)
+        conf.条件组 = 条件组
+        写入配置(conf)
+    }
 
 </script>
 
@@ -126,17 +190,28 @@
     <div class="top">
         <!-- 左侧文本框，设置SQL数据 -->
         <div class="left-child">
-            <!-- 下拉框 -->
-
-            <select id="left-child-select" bind:value={sql} >
-                <option label="default" disabled hidden>Select an option</option>
-                {#each 条件组 as item(item.title,item.sql)}
+            <!-- 下拉框 + 文本框 -->
+            <select id="left-child-select" bind:value={currentSql} on:change={changCurrent}>
+                {#each 条件组 as item(item.title)}
                     <option label="{item.title}" value="{item.sql}"/>
                 {/each}
             </select>
             <div class="fn__hr" />
-            <BeTextarea bind:value={sql} rows="9" cols="40" bind:readonly={areaRead}> </BeTextarea>
+            <BeTextarea bind:value={currentSql} rows="9" cols="40" readonly> </BeTextarea>
         </div>
+        {#if isAddConditions}
+            <div class="left-child">
+                <!-- 下拉框 + 文本框 -->
+
+                <input type="text" bind:value={var1} placeholder="条件名称">
+                <div class="fn__hr" />
+                <BeTextarea bind:value={var2} rows="9" cols="40"> </BeTextarea>
+            </div>
+        {/if}
+
+
+
+
         
         <!-- <div>Protyle demo: id = {blockID}</div> -->
         <div class="right-child">  
@@ -148,20 +223,18 @@
             </div>
             <div class="fn__hr" />
             <div>
-                <button>新材料</button>
+                <button on:click={getProtyle}>新材料</button>
                 <button>复习</button>
                 <button>忽略此材料</button>
                 <button on:click={激活设置按钮}>设置</button>
-                
-                <button on:click={getProtyle}>测试</button>
             </div>
             <div class="fn__hr" />
             {#if isSettingActive}
-                    <button on:click={保存设置}>保存</button>
-                    <button on:click={激活设置按钮}>取消</button>
-            {:else}
-                <button on:click={激活设置按钮} style="display: none">保存</button>
-                <button on:click={激活设置按钮} style="display: none">取消</button>
+                <button on:click={激活增加条件按钮}>增加条件</button>
+                <button on:click={激活编辑当前条件按钮}>编辑当前条件</button>
+                <button on:click={激活删除当前条件按钮}>删除当前条件</button>
+                <button on:click={保存设置}>保存</button>
+                <button on:click={激活设置按钮}>取消</button>
             {/if}
         </div>
     </div>

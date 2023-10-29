@@ -6,7 +6,7 @@ export async function 获取配置(){
 
 export async function 写入配置(obj){
     let saveDataBlob = new Blob([JSON.stringify(obj),], { type: "application/json" });
-        let 数据文件 = new File([saveDataBlob], "config.json", { lastModified: Date.now(), });
+        let 数据文件 = new File([saveDataBlob], "data-config.json", { lastModified: Date.now(), });
         let data = new FormData();
         data.append("path", "/data/"+configUrl);
         data.append("file", 数据文件);
