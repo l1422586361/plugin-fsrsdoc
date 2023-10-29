@@ -2,17 +2,27 @@
     import { onDestroy, onMount } from "svelte";
     import { version, sql as query } from "@/api";
     import { showMessage, fetchPost, Protyle } from "siyuan";
-    import BeTextarea from '@brewer/beerui/be-textarea';
+    // import '@brewer/beerui/assets/beer.css'
+    import {
+        BeTextarea
+
+    } from '@brewer/beerui';
+    import { 获取配置,写入配置 } from "./writeConfig.js";
 
     export let app;
 
     let time: string = "";
     let ver: string = "";
-
     let divProtyle: HTMLDivElement;
     let protyle: any;
+    let conf: any;
     let blockID: string = '';
-    let sql: string = 'SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;';
+
+
+
+
+    let 条件组 = [];
+    let sql: string = ''; 
 
     onMount(async () => {
         ver = await version();
@@ -20,6 +30,12 @@
             time = new Date(response.data).toString();
         });
         protyle = await initProtyle();
+        // 载入数据
+        conf = await 获取配置();
+        console.log(conf)
+        条件组 = conf.条件组
+        sql = 条件组.find(dict => dict.title ='Default')['sql'] || 'SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;'; // TODO：后面加入到设置里，初始条件
+        // console.log(sql)
     });
 
     onDestroy(() => {
@@ -28,6 +44,15 @@
     });
 
     async function initProtyle() {
+        // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
+        let blocks: Block[] = await query('SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;');
+        blockID = blocks[0].id;
+        return new Protyle(app, divProtyle, {
+            blockId: blockID
+        });
+    }
+
+    async function getProtyle() {
         // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
         let blocks: Block[] = await query(sql);
         blockID = blocks[0].id;
@@ -42,6 +67,10 @@
         isSettingActive = !isSettingActive
         areaRead = !areaRead
     }
+    async function 保存设置() {
+        激活设置按钮()
+    }
+
 
 </script>
 
@@ -97,11 +126,13 @@
     <div class="top">
         <!-- 左侧文本框，设置SQL数据 -->
         <div class="left-child">
-            <select id="left-child-select">
-                <option value="条件a">条件a</option>
-                <option value="条件a">条件b</option>
-                <option value="条件a">条件c</option>
-                <option value="条件a">条件d</option>
+            <!-- 下拉框 -->
+
+            <select id="left-child-select" bind:value={sql} >
+                <option label="default" disabled hidden>Select an option</option>
+                {#each 条件组 as item(item.title,item.sql)}
+                    <option label="{item.title}" value="{item.sql}"/>
+                {/each}
             </select>
             <div class="fn__hr" />
             <BeTextarea bind:value={sql} rows="9" cols="40" bind:readonly={areaRead}> </BeTextarea>
@@ -122,11 +153,11 @@
                 <button>忽略此材料</button>
                 <button on:click={激活设置按钮}>设置</button>
                 
-                <button on:click={initProtyle}>测试</button>
+                <button on:click={getProtyle}>测试</button>
             </div>
             <div class="fn__hr" />
             {#if isSettingActive}
-                    <button on:click={激活设置按钮}>保存</button>
+                    <button on:click={保存设置}>保存</button>
                     <button on:click={激活设置按钮}>取消</button>
             {:else}
                 <button on:click={激活设置按钮} style="display: none">保存</button>
