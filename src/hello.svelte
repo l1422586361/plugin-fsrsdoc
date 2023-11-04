@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { version, sql as query, getBlockAttrs, getBlockByID } from "@/api";
+    import { version, sql as query } from "@/api";
     import { showMessage, fetchPost, Protyle } from "siyuan";
     // import '@brewer/beerui/assets/beer.css'
     import {
@@ -90,10 +90,12 @@
         });
     }
 
-    function changCurrent(){
+    function changeCurrent(event){
         // 下拉列表属性跟踪
-        条件组 = conf.条件组
-        console.log(currentTitle,currentSql)
+        // 条件组 = conf.条件组
+        currentTitle = event.detail
+        let current条件 = 条件组.find(item => item.title === currentTitle)
+        currentSql = current条件.sql
     }
 
 
@@ -211,9 +213,9 @@
         <div class="left-child">
             <!-- 下拉框 + 文本框 -->
             <!-- <BeSelect id="left-child-select" bind:value={currentSql}> -->
-            <BeSelect bind:value={currentSql} on:change={changCurrent}>
-                {#each 条件组 as item(item.title)}
-                    <BeOption style="max-height=200px" label="{item.title}" value="{item.sql}"/>
+            <BeSelect bind:value={currentTitle}  on:change={changeCurrent}>
+                {#each 条件组 as item}
+                    <BeOption style="max-height=200px" label={item.title} value={item.title} />
                 {/each}
             </BeSelect>
             <div class="fn__hr" />
