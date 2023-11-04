@@ -1,12 +1,15 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { version, sql as query } from "@/api";
+    import { version, sql as query, getBlockAttrs, getBlockByID } from "@/api";
     import { showMessage, fetchPost, Protyle } from "siyuan";
     // import '@brewer/beerui/assets/beer.css'
     import {
-        BeTextarea
+        BeTextarea,BeProgress, BeInput,BeSelect,BeOption, BeButton
+
+
     } from '@brewer/beerui';
-    import { 获取配置,写入配置 } from "./writeConfig.js";
+    import '@brewer/beerui/assets/beer.css'
+    import { 获取配置,写入配置 } from "./js/writeConfig.js";
 
     export let app;
 
@@ -21,7 +24,7 @@
 
 
     let 条件组: string[] = [];
-    let currentTitle: string = 'Default'
+    let currentTitle: string = ''
     let currentSql: string = ''; 
 
     onMount(async () => {
@@ -34,6 +37,7 @@
         conf = await 获取配置();
         console.log(conf)
         条件组 = conf.条件组
+        currentTitle = 'Default'
         currentSql = 条件组.find(dict => dict.title =currentTitle)['sql']; // TODO：后面加入到设置里，初始条件
         // console.log(sql)
     });
@@ -55,7 +59,15 @@
     async function getProtyle() {
         // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
         let blocks: Block[] = await query(currentSql);
+        // console.log(blocks)
+        if(blocks.length === 0){
+            showMessage("查询为空")
+            return
+        }
         blockID = blocks[0].id;
+        // console.log(blockID)
+        console.log(getBlockAttrs(blockID))
+        console.log(getBlockByID(blockID))
         return new Protyle(app, divProtyle, {
             blockId: blockID
         });
@@ -63,10 +75,7 @@
 
     function changCurrent(){
         // 下拉列表属性跟踪
-        let currentIndex = event.target.selectedIndex
-        currentTitle = event.target.options[currentIndex].getAttribute("label")
-        currentSql = event.target.value
-        
+        条件组 = conf.条件组
         console.log(currentTitle,currentSql)
     }
 
@@ -140,11 +149,6 @@
 
 <style>
     .top {
-        width: 100%;
-        /* height: 30%; */
-        position: fixed;
-        top: auto;
-        /* height: 200px; */
         background-color: #f6f6f6;
     }
     .right-child {
@@ -153,28 +157,39 @@
         /* float: left; */
         margin-left: 20px;
         vertical-align: top;
+        width: 300px;
+    }
+    #right-child-1 input {
+        width:100%;
+    }
+    .middle-child {
+        display: inline-block;
+        /* vertical-align: top; */
+        /* float: left; */
+        margin-left: 20px;
+        vertical-align: top;
+        width: 300px;
     }
     .left-child {
         display: inline-block;
         vertical-align: top;
+        max-height: 300px;
         /* vertical-align: top; */
         /* float: left; */
         
     }
-    #right-child-1 {
-        display: flex;
-        justify-content: space-between;
+    .be-textarea textarea {
+        height: 200px;
     }
+
     #left-child-select{
         width: 100%;
+        max-height: 200px;
     }
     #protyle{
-        height: 70%;
-        width: 100%;
-        position: absolute;
-        top: 240px;
-        /* margin-top: 200px; */
+        max-height: 570px;
         overflow: auto;
+        z-index: 0;
     }
     /* p{
         font-size: 20px;
@@ -191,21 +206,22 @@
         <!-- 左侧文本框，设置SQL数据 -->
         <div class="left-child">
             <!-- 下拉框 + 文本框 -->
-            <select id="left-child-select" bind:value={currentSql} on:change={changCurrent}>
+            <!-- <BeSelect id="left-child-select" bind:value={currentSql}> -->
+            <BeSelect id="left-child-select" bind:value={currentSql} on:change={changCurrent}>
                 {#each 条件组 as item(item.title)}
-                    <option label="{item.title}" value="{item.sql}"/>
+                    <BeOption style="max-height=200px" label="{item.title}" value="{item.sql}"/>
                 {/each}
-            </select>
+            </BeSelect>
             <div class="fn__hr" />
-            <BeTextarea bind:value={currentSql} rows="9" cols="40" readonly> </BeTextarea>
+            <BeTextarea style="height:165px" bind:value={currentSql} rows="9" cols="40" readonly> </BeTextarea>
         </div>
         {#if isAddConditions}
             <div class="left-child">
                 <!-- 下拉框 + 文本框 -->
 
-                <input type="text" bind:value={var1} placeholder="条件名称">
+                <BeInput type="text" bind:value={var1} placeholder="条件名称" />
                 <div class="fn__hr" />
-                <BeTextarea bind:value={var2} rows="9" cols="40"> </BeTextarea>
+                <BeTextarea style="height:165px" bind:value={var2} rows="9" cols="40"> </BeTextarea>
             </div>
         {/if}
 
@@ -214,35 +230,49 @@
 
         
         <!-- <div>Protyle demo: id = {blockID}</div> -->
-        <div class="right-child">  
-            <!-- 右侧 -->
-            <div id="right-child-1">
-                <p>当前： name</p>
-                <button>复制</button>
-                <p>-/--</p>
-            </div>
+        <div class="middle-child">            
             <div class="fn__hr" />
             <div>
-                <button on:click={getProtyle}>新材料</button>
-                <button>复习</button>
-                <button>忽略此材料</button>
-                <button on:click={激活设置按钮}>设置</button>
+                <BeButton size='mini' type="default" on:click={getProtyle}>新材料</BeButton>
+                <BeButton size='mini' type="default">复习</BeButton>
+                <BeButton size='mini' type="default">忽略此材料</BeButton>
+                <BeButton size='mini' type="default" on:click={激活设置按钮}>设置</BeButton>
             </div>
             <div class="fn__hr" />
             {#if isSettingActive}
-                <button on:click={激活增加条件按钮}>增加条件</button>
-                <button on:click={激活编辑当前条件按钮}>编辑当前条件</button>
-                <button on:click={激活删除当前条件按钮}>删除当前条件</button>
-                <button on:click={保存设置}>保存</button>
-                <button on:click={激活设置按钮}>取消</button>
+                <BeButton size='mini' type="default" on:click={激活增加条件按钮}>增加条件</BeButton>
+                <BeButton size='mini' type="default" on:click={激活编辑当前条件按钮}>编辑当前条件</BeButton>
+                <BeButton size='mini' type="default" on:click={激活删除当前条件按钮}>删除当前条件</BeButton>
+                <div class="fn__hr" />
+                <BeButton size='mini' type="default" on:click={保存设置}>保存</BeButton>
+                <BeButton size='mini' type="default" on:click={激活设置按钮}>取消</BeButton>
             {/if}
         </div>
+
+        <div class="right-child">
+            <!-- 右侧 -->
+            <div id="right-child-1">
+                <BeInput type="text" bind:value={blockID} readonly />
+                <div class="fn__hr" />
+                <BeInput type="text" value="标签" readonly />
+                <div class="fn__hr" />
+                <!-- <button>复制</button> -->
+                <BeInput type="text" value="111/123" readonly />
+                <div class="fn__hr" />
+                <!-- <ProgressBar /> -->
+                <BeProgress  percentage={60} type="line" status="success" />
+            </div>
+        </div>
+
+        <div class="fn__hr" />
+        <div style="height:100%;background-color: var(--b3-theme-background);padding:6px 15px 6px;color: var(--b3-theme-on-surface);user-select:text">{blockID} <svg class="protyle-breadcrumb__arrow"><use xlink:href="#iconRight"></use></svg> 文档名</div>
+        <div class="fn__hr" />
+        <div id="protyle" bind:this={divProtyle}/>
     </div>
     
     
-    <div class="fn__hr" />
-    <div class="fn__hr" />
-    <div id="protyle" bind:this={divProtyle}/>
+   
+
     
 </div>
 
