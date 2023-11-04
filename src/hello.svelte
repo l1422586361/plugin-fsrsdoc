@@ -4,12 +4,14 @@
     import { showMessage, fetchPost, Protyle } from "siyuan";
     // import '@brewer/beerui/assets/beer.css'
     import {
-        BeTextarea,BeProgress, BeInput,BeSelect,BeOption, BeButton
+        BeTextarea,BeProgress, BeInput,BeSelect,BeOption, BeButton,BeFormItem, BeForm
+
 
 
     } from '@brewer/beerui';
     import '@brewer/beerui/assets/beer.css'
     import { 获取配置,写入配置 } from "./js/writeConfig.js";
+    import { getBlockInfoByID } from "./js/query.js"
 
     export let app;
 
@@ -27,6 +29,11 @@
     let currentTitle: string = ''
     let currentSql: string = ''; 
 
+    let currentBlock: any = {
+        'tags':['无'],
+        'attrs':['无']
+    };
+
     onMount(async () => {
         ver = await version();
         fetchPost("/api/system/currentTime", {}, (response) => {
@@ -39,6 +46,7 @@
         条件组 = conf.条件组
         currentTitle = 'Default'
         currentSql = 条件组.find(dict => dict.title =currentTitle)['sql']; // TODO：后面加入到设置里，初始条件
+        // currentBlock = {}
         // console.log(sql)
     });
 
@@ -55,7 +63,11 @@
             blockId: blockID
         });
     }
+    
 
+
+
+    
     async function getProtyle() {
         // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
         let blocks: Block[] = await query(currentSql);
@@ -66,8 +78,13 @@
         }
         blockID = blocks[0].id;
         // console.log(blockID)
-        console.log(getBlockAttrs(blockID))
-        console.log(getBlockByID(blockID))
+        // console.log(getBlockAttrs(blockID))
+        // console.log(getBlockByID(blockID))
+   
+        currentBlock = await getBlockInfoByID(blockID)
+
+        // console.log(222,currentBlock)
+
         return new Protyle(app, divProtyle, {
             blockId: blockID
         });
@@ -151,17 +168,6 @@
     .top {
         background-color: #f6f6f6;
     }
-    .right-child {
-        display: inline-block;
-        /* vertical-align: top; */
-        /* float: left; */
-        margin-left: 20px;
-        vertical-align: top;
-        width: 300px;
-    }
-    #right-child-1 input {
-        width:100%;
-    }
     .middle-child {
         display: inline-block;
         /* vertical-align: top; */
@@ -178,22 +184,20 @@
         /* float: left; */
         
     }
-    .be-textarea textarea {
-        height: 200px;
-    }
 
-    #left-child-select{
-        width: 100%;
-        max-height: 200px;
-    }
     #protyle{
         max-height: 570px;
         overflow: auto;
         z-index: 0;
     }
-    /* p{
-        font-size: 20px;
-    } */
+    #title{
+        height:100%;background-color: var(--b3-theme-background);padding:6px 15px 6px;color: var(--b3-theme-on-surface);user-select:text
+    }
+    #dashboard{
+        background-color: var(--b3-theme-background);
+        padding:6px 15px 6px;
+    }
+
 </style>
 
 <div class="b3-dialog__content" style="overflow: hidden;max-height:100%">
@@ -207,7 +211,7 @@
         <div class="left-child">
             <!-- 下拉框 + 文本框 -->
             <!-- <BeSelect id="left-child-select" bind:value={currentSql}> -->
-            <BeSelect id="left-child-select" bind:value={currentSql} on:change={changCurrent}>
+            <BeSelect bind:value={currentSql} on:change={changCurrent}>
                 {#each 条件组 as item(item.title)}
                     <BeOption style="max-height=200px" label="{item.title}" value="{item.sql}"/>
                 {/each}
@@ -231,7 +235,7 @@
         
         <!-- <div>Protyle demo: id = {blockID}</div> -->
         <div class="middle-child">            
-            <div class="fn__hr" />
+            <!-- <div class="fn__hr" /> -->
             <div>
                 <BeButton size='mini' type="default" on:click={getProtyle}>新材料</BeButton>
                 <BeButton size='mini' type="default">复习</BeButton>
@@ -249,23 +253,38 @@
             {/if}
         </div>
 
-        <div class="right-child">
-            <!-- 右侧 -->
-            <div id="right-child-1">
-                <BeInput type="text" bind:value={blockID} readonly />
-                <div class="fn__hr" />
-                <BeInput type="text" value="标签" readonly />
-                <div class="fn__hr" />
-                <!-- <button>复制</button> -->
-                <BeInput type="text" value="111/123" readonly />
-                <div class="fn__hr" />
-                <!-- <ProgressBar /> -->
-                <BeProgress  percentage={60} type="line" status="success" />
-            </div>
+
+
+        <!-- 显示信息 -->
+        <div class="fn__hr" />
+        <div id="title">{blockID} <svg class="protyle-breadcrumb__arrow"><use xlink:href="#iconRight"></use></svg> 文档名</div>
+
+        <div id="dashboard">
+            
+            <BeForm inline>
+                <BeFormItem label="进度">
+                    <div style="width: 200px;padding:10px;line-height:12px" title="{blockID}">
+                        <BeProgress percentage={70} type="line" strokWidth={20} textInside={true} color='#2fa78e'/>
+                    </div>
+                    
+                </BeFormItem>
+                <BeFormItem label="标签">
+                    <div>
+                        {#each currentBlock.tags as item}
+                            <BeButton class='demo-button' type='default' size='mini'>{item}</BeButton>
+                        {/each}
+                    </div>
+                </BeFormItem>
+                <BeFormItem label="属性块">
+                    <div>
+                        {#each currentBlock.attrs as item}
+                            <BeButton class='demo-button' type='default' size='mini'>{item}</BeButton>
+                        {/each}
+                    </div>
+                </BeFormItem>
+            </BeForm>
         </div>
 
-        <div class="fn__hr" />
-        <div style="height:100%;background-color: var(--b3-theme-background);padding:6px 15px 6px;color: var(--b3-theme-on-surface);user-select:text">{blockID} <svg class="protyle-breadcrumb__arrow"><use xlink:href="#iconRight"></use></svg> 文档名</div>
         <div class="fn__hr" />
         <div id="protyle" bind:this={divProtyle}/>
     </div>
