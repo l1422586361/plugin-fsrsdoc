@@ -45,9 +45,9 @@
         console.log(conf)
         条件组 = conf.条件组
         currentTitle = 'Default'
-        currentSql = 条件组.find(dict => dict.title =currentTitle)['sql']; // TODO：后面加入到设置里，初始条件
+        currentSql = 条件组.find(dict => dict.title == currentTitle)['sql']; // TODO：后面加入到设置里，初始条件
         // currentBlock = {}
-        // console.log(sql)
+        // console.log(currentSql)
     });
 
     onDestroy(() => {
@@ -213,7 +213,7 @@
         <div class="left-child">
             <!-- 下拉框 + 文本框 -->
             <!-- <BeSelect id="left-child-select" bind:value={currentSql}> -->
-            <BeSelect bind:value={currentTitle}  on:change={changeCurrent}>
+            <BeSelect value={currentTitle} on:change={changeCurrent}>
                 {#each 条件组 as item}
                     <BeOption style="max-height=200px" label={item.title} value={item.title} />
                 {/each}
@@ -259,7 +259,7 @@
 
         <!-- 显示信息 -->
         <div class="fn__hr" />
-        <div id="title">{blockID} <svg class="protyle-breadcrumb__arrow"><use xlink:href="#iconRight"></use></svg> 文档名</div>
+        <div id="title">{blockID} <svg class="protyle-breadcrumb__arrow"><use xlink:href="#iconRight"></use></svg> {currentBlock.title}</div>
 
         <div id="dashboard">
             
