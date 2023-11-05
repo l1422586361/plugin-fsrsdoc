@@ -320,6 +320,7 @@
             <!-- <div class="fn__hr" /> -->
             <div>
                 <BeButton size='mini' type="default" on:click={() => {isStudyActive = true;isSettingActive = false;getProtyle()}}>漫游</BeButton>
+                <!-- TODO：复习将查看添加入复习队列即属性块值为queue，且due到期的块 -->
                 <BeButton size='mini' type="default">复习</BeButton>
                 <BeButton size='mini' type="default" on:click={激活设置按钮}>设置</BeButton>
                 <BeButton size='mini' type="default" on:click={测试按钮}>测试</BeButton>
@@ -336,7 +337,9 @@
             {#if isStudyActive}
                 <BeButton size='mini' type="default" on:click={激活忽略当前材料}>忽略此材料</BeButton>
                 <div class="fn__hr" />
+                <!-- TODO：定义块属性值为queue，并使用fsrs定义一些周期调度的属性块 -->
                 <BeButton size='mini' type="default">加入到复习队列</BeButton>
+                <!-- TODO：机制跟忽略差不多，值不同而已，代表已手动将对应块放到SM -->
                 <BeButton size='mini' type="default">加入到SM队列</BeButton>
             {/if}
         </div>

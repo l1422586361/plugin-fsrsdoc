@@ -2,7 +2,7 @@
     "条件组": [
         {
             "title": "Default",
-            "sql": "SELECT * FROM blocks where type='d' ORDER BY RANDOM () LIMIT 1"
+            "sql": "SELECT * FROM blocks where type='d'"
         }
     ]
 }
