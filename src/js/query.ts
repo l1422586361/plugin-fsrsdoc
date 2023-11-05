@@ -89,7 +89,7 @@ export async function getStatisticalProgress(conditionGroup: object,key: string,
     
 
     // 获取已有due，如果和当天一样，不进行计算(在外部处理，方法只明确进行统计)
-    // let currentDate = await getCurrentDate()
+    let currentDate = await getCurrentDate()
     // let dict = conditionGroup.find(item => item.title === key)
     // if(dict.due == currentDate){
     //     return conditionGroup

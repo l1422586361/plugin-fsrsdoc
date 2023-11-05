@@ -107,7 +107,6 @@
                 blockID = blocks[randomIndex].id
                 break
             }
-            // TODO：已经没有新的材料的判断还没做
         }
 
         
