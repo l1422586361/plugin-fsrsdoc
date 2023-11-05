@@ -47,11 +47,11 @@ export async function getBlockInfoByID(id: BlockId) {
         BlockInfo.attrs = ['无']
     }
 
-    console.log(444,BlockInfo)
+    // console.log(444,BlockInfo)
     return BlockInfo
 }
 
-function getCurrentDate(){
+export function getCurrentDate(){
     // 获取当前日期，以2023-11-05的格式
     let currentDate = new Date()
     let year = currentDate.getFullYear()
@@ -61,7 +61,7 @@ function getCurrentDate(){
     return formattedDate
 }
 
-function convertArrToDict(arr: string[]){
+export function convertArrToDict(arr: string[]){
     // 将aaa: 111字符串数组转化为字典
     let obj = []
     for(let e in arr){
@@ -86,13 +86,14 @@ function convertArrToDict(arr: string[]){
 
 export async function getStatisticalProgress(conditionGroup: object,key: string,sql: string) {
     // 将统计结果写入到条件组指定条件中
-    let currentDate = await getCurrentDate()
+    
 
-    // 获取已有due，如果和当天一样，不进行计算
-    let dict = conditionGroup.find(item => item.title === key)
-    if(dict.due == currentDate){
-        return conditionGroup
-    }
+    // 获取已有due，如果和当天一样，不进行计算(在外部处理，方法只明确进行统计)
+    // let currentDate = await getCurrentDate()
+    // let dict = conditionGroup.find(item => item.title === key)
+    // if(dict.due == currentDate){
+    //     return conditionGroup
+    // }
 
     
     // 查询SQL获取总数
@@ -112,7 +113,8 @@ export async function getStatisticalProgress(conditionGroup: object,key: string,
         let attrs: object = await convertArrToDict(blockInfo.attrs)
         if(attrs.some(item => item.randomNoteType === 'ignore')){
             // 减去忽略的
-            查询总数 = 查询总数 - 1
+            // 查询总数 = 查询总数 - 1
+            当前已完成 += 1
         }
     } 
     // console.log(currentDate)

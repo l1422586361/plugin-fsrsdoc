@@ -11,7 +11,7 @@
     } from '@brewer/beerui';
     import '@brewer/beerui/assets/beer.css'
     import { 获取配置,写入配置 } from "./js/writeConfig.js";
-    import { getBlockInfoByID } from "./js/query.js"
+    import { getBlockInfoByID, getStatisticalProgress,convertArrToDict,getCurrentDate } from "./js/query.js"
 
     export let app;
 
@@ -34,6 +34,12 @@
         'attrs':['无']
     };
 
+    let 查询总数: number = 0
+    let 当前已完成 = 0
+    let 进度 = (当前已完成/查询总数) * 100
+
+
+
     onMount(async () => {
         ver = await version();
         fetchPost("/api/system/currentTime", {}, (response) => {
@@ -48,6 +54,7 @@
         currentSql = 条件组.find(dict => dict.title == currentTitle)['sql']; // TODO：后面加入到设置里，初始条件
         // currentBlock = {}
         // console.log(currentSql)
+        
     });
 
     onDestroy(() => {
@@ -65,9 +72,8 @@
     }
     
 
-
-
-    
+    // 漫游区
+    let isStudyActive: boolean = true
     async function getProtyle() {
         // let sql = "SELECT * FROM blocks ORDER BY RANDOM () LIMIT 1;";
         let blocks: Block[] = await query(currentSql);
@@ -76,7 +82,40 @@
             showMessage("查询为空")
             return
         }
-        blockID = blocks[0].id;
+
+        // 初始化
+        let currentDate = await getCurrentDate()
+        let currentConditions = 条件组.find(item => item.title === currentTitle)
+        if(currentConditions.due != currentDate){
+            条件组 = await getStatisticalProgress(条件组,currentTitle,currentSql)
+            conf.条件组 = 条件组
+            写入配置(conf)
+        }
+        
+        
+        查询总数 = currentConditions.totalNumber
+        当前已完成 = currentConditions.completed
+        进度=((当前已完成/查询总数) * 100).toFixed(1) // 精度为小数点后一位
+
+        while(true){
+            let randomIndex = Math.floor(Math.random() * blocks.length)
+            let blockInfo = await getBlockInfoByID(blocks[randomIndex].id)
+            let attrs = await convertArrToDict(blockInfo.attrs)
+            // TODO：后期要将忽略条件写成统一的方法
+            if(!attrs.some(item => item.randomNoteType === 'ignore')){
+                // TODO： 添加fsrs内容
+                blockID = blocks[randomIndex].id
+                break
+            }
+            // TODO：已经没有新的材料的判断还没做
+        }
+
+        
+
+
+        console.log(查询总数,当前已完成,进度)
+        // blockID = blocks[0].id;
+        
         // console.log(blockID)
         // console.log(getBlockAttrs(blockID))
         // console.log(getBlockByID(blockID))
@@ -101,14 +140,15 @@
 
     // 设置按钮功能区
     let isSettingActive: boolean = false
-    let areaRead: boolean = true
     async function 激活设置按钮() {
         isSettingActive = !isSettingActive
-        areaRead = !areaRead
+        isStudyActive = false
         if ( isAddConditions = true){
             isAddConditions = !isAddConditions
         }
     }
+
+
     async function 保存设置() {
         if (var1 !='' && var2 !=''){
             // 新增条件
@@ -162,6 +202,47 @@
         // console.log(条件组)
         conf.条件组 = 条件组
         写入配置(conf)
+        // console.log(条件组)
+        // 重置当前选项
+        // TODO：bug——删除激活后下拉列表不跟手
+        currentTitle = 条件组[0].title
+        currentSql = 条件组[0].sql
+    }
+
+    function addCompleteWithCondition(group: object,key: string){
+        // 条件组设置指定条件 增加已完成计数
+        let current  = group.find(item => item.title == key)
+
+        current['completed'] += 1
+        当前已完成 += 1
+        let newGroup = group.filter(item => item.title != key)
+        newGroup.push(current)
+        // console.log(newGroup)
+        return newGroup
+    }
+
+    // 忽略当前材料
+    async function 激活忽略当前材料(){
+        // await setBlockAttrs(blockID,{ "custom-randomNoteType": "ignore" })
+        // // 如果当前id已经加过忽略了，不重复计数
+        // 条件组 = addCompleteWithCondition(条件组,currentTitle)
+        // conf.条件组 = 条件组
+        // 写入配置(conf)
+        let aa = await convertArrToDict(currentBlock.attrs)
+        console.log(aa)
+
+
+        // let result = await getBlockInfoByID(blockID)
+        // console.log(45555,result)
+    }
+    async function 测试按钮() {
+        // let aa = await getStatisticalProgress(条件组,currentTitle,currentSql)
+        // 条件组 = aa
+        // conf.条件组 = aa
+        // 写入配置(conf)
+        // console.log(1112,aa)
+
+        await addCompleteWithCondition(条件组,currentTitle)
     }
 
 </script>
@@ -214,7 +295,7 @@
             <!-- 下拉框 + 文本框 -->
             <!-- <BeSelect id="left-child-select" bind:value={currentSql}> -->
             <BeSelect value={currentTitle} on:change={changeCurrent}>
-                {#each 条件组 as item}
+                {#each 条件组 as item (item.title)}
                     <BeOption style="max-height=200px" label={item.title} value={item.title} />
                 {/each}
             </BeSelect>
@@ -239,10 +320,10 @@
         <div class="middle-child">            
             <!-- <div class="fn__hr" /> -->
             <div>
-                <BeButton size='mini' type="default" on:click={getProtyle}>新材料</BeButton>
+                <BeButton size='mini' type="default" on:click={() => {isStudyActive = true;isSettingActive = false;getProtyle()}}>漫游</BeButton>
                 <BeButton size='mini' type="default">复习</BeButton>
-                <BeButton size='mini' type="default">忽略此材料</BeButton>
                 <BeButton size='mini' type="default" on:click={激活设置按钮}>设置</BeButton>
+                <BeButton size='mini' type="default" on:click={测试按钮}>测试</BeButton>
             </div>
             <div class="fn__hr" />
             {#if isSettingActive}
@@ -252,6 +333,12 @@
                 <div class="fn__hr" />
                 <BeButton size='mini' type="default" on:click={保存设置}>保存</BeButton>
                 <BeButton size='mini' type="default" on:click={激活设置按钮}>取消</BeButton>
+            {/if}
+            {#if isStudyActive}
+                <BeButton size='mini' type="default" on:click={激活忽略当前材料}>忽略此材料</BeButton>
+                <div class="fn__hr" />
+                <BeButton size='mini' type="default">加入到复习队列</BeButton>
+                <BeButton size='mini' type="default">加入到SM队列</BeButton>
             {/if}
         </div>
 
@@ -265,8 +352,8 @@
             
             <BeForm inline>
                 <BeFormItem label="进度">
-                    <div style="width: 200px;padding:10px;line-height:12px" title="{blockID}">
-                        <BeProgress percentage={70} type="line" strokWidth={20} textInside={true} color='#2fa78e'/>
+                    <div style="width: 200px;padding:10px;line-height:12px" title="{当前已完成}/{查询总数}">
+                        <BeProgress percentage={进度} type="line" strokWidth={20} textInside={true} color='#2fa78e'/>
                     </div>
                     
                 </BeFormItem>
